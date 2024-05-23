@@ -1,0 +1,7 @@
+src/__pycache__
+data/X_test.txt
+data/X_train.txt
+data/y_test.txt
+data/y_train.txt
+test.ipynb
+
