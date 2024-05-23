@@ -35,7 +35,7 @@ def run_naive_bayes(x, y, test_size=0.1, verbose=False, group_number=4, random_s
     good = 0
     total = 0
     nb = NaiveBayes()
-    nb.build_classifier(x_train, y_train, group_number)
+    nb.fit(x_train, y_train, group_number)
     for test_x, test_y in zip(x_test, y_test):
         prediction = nb.predict(test_x)
         if verbose:

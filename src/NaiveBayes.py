@@ -8,7 +8,7 @@ class NaiveBayes:
         self.priors = {}
         self.likelihoods = {}
 
-    def build_classifier(self, train_features, train_classes, group_number):
+    def fit(self, train_features, train_classes, group_number):
         self.priors = Counter(train_classes)
         self.likelihoods = np.zeros(
             shape=(len(self.priors), train_features.shape[1], group_number)
