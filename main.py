@@ -8,12 +8,22 @@ from sklearn.preprocessing import LabelEncoder
 from sklearn.datasets import load_iris
 
 
-"""file = arff.loadarff("data/glass.arff")
-df = pd.DataFrame(file[0])"""
 nb = NaiveBayes()
-iris = load_iris()
-x_train, x_test, y_train, y_test = train_test_split(iris.data, iris.target, test_size=0.1, random_state=0)
-nb.find_intervals(x_train, 5)
+file = arff.loadarff("data/wdbc.arff")
+df = pd.DataFrame(file[0])
+
+
+def encode_column(column):
+    le = LabelEncoder()
+    column = le.fit_transform(column)
+    return column
+
+
+df["class"] = encode_column(df["class"])
+X = np.array(df.drop("class", axis=1))
+y = np.array(df["class"])
+x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.1, random_state=0)
+nb.find_intervals(x_train, 4)
 intervals = nb.intervals
 x_train = np.array([NaiveBayes.data_discretization(features, intervals[i]) for i, features in enumerate(x_train.T)]).T
 x_test = np.array([NaiveBayes.data_discretization(features, intervals[i]) for i, features in enumerate(x_test.T)]).T
