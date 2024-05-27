@@ -55,22 +55,3 @@ class ContrastPatternClassificator:
             return self.class_counter.most_common(1)[0][0]
         return cl
 
-        """found_patterns = 0
-        for pattern in sorted_table:
-            indices = np.where(pattern[:-1])
-            size = np.size(indices)
-            if size == 0:
-                continue
-            if contrast_patterns_accuracy[pattern[-1]] is not None:
-                continue
-            for possible_pattern in sorted_table:
-                if pattern[indices] is not possible_pattern[indices]:
-                    continue
-                
-                
-                    
-            
-            
-            if found_patterns == np.size(self.classes):
-                break
-        return contrast_patterns_accuracy"""
