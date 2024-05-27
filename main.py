@@ -1,12 +1,46 @@
 from src.NaiveBayes import NaiveBayes
+from src.LazyEvaluation import ContrastPatternClassificator
 from sklearn.model_selection import train_test_split
 import pandas as pd
 import numpy as np
 from scipy.io import arff
 from sklearn.preprocessing import LabelEncoder
-from sklearn.naive_bayes import GaussianNB
+from sklearn.datasets import load_iris
 
 
+"""file = arff.loadarff("data/glass.arff")
+df = pd.DataFrame(file[0])"""
+nb = NaiveBayes()
+iris = load_iris()
+x_train, x_test, y_train, y_test = train_test_split(iris.data, iris.target, test_size=0.1, random_state=0)
+nb.find_intervals(x_train, 5)
+intervals = nb.intervals
+x_train = np.array([NaiveBayes.data_discretization(features, intervals[i]) for i, features in enumerate(x_train.T)]).T
+x_test = np.array([NaiveBayes.data_discretization(features, intervals[i]) for i, features in enumerate(x_test.T)]).T
+lazy_clf = ContrastPatternClassificator(x_train, y_train)
+res = 0
+for i, v in enumerate(x_test):
+    pred = lazy_clf.predict(v)
+    if pred == y_test[i]:
+        res += 1
+print(res/len(y_test))
+
+"""def encode_column(column):
+    le = LabelEncoder()
+    column = le.fit_transform(column)
+    return column
+
+
+df["class"] = encode_column(df["class"])
+X = np.array(df.drop("class", axis=1))
+y = np.array(df["class"])
+x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.1, random_state=0)
+
+lazy_clf = ContrastPatternClassificator(x_train, y_train)
+a = lazy_clf.predict(x_test[3])
+print(a)"""
+
+"""
 def run_naive_bayes(x, y, test_size=0.1, verbose=False, group_number=4, random_state=0):
     x_train, x_test, y_train, y_test = train_test_split(
         x, y, test_size=test_size, random_state=random_state
@@ -65,7 +99,7 @@ x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.1, random_
 
 
 run_naive_bayes(X, y, group_number=8, verbose=True, random_state=11)
-
+"""
 """
 rfc = RandomForestClassifier()
 rfc.fit(x_train, y_train)

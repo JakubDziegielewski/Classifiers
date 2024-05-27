@@ -1,22 +1,76 @@
 import numpy as np
+from itertools import repeat
 from collections import Counter
 
+
 class ContrastPatternClassificator:
-    def __init__(self, X: np.array, y:np.array) -> None:
+    def __init__(self, X: np.array, y: np.array) -> None:
         self.X = X
         self.y = y
-        self.classes = np.unique(y)
-    def find_contrast_patterns(self, x: np.array):
-        contrast_patterns = dict(zip(self.classes, [] * len(self.classes)))
+        self.class_counter = Counter(y)
+        self.classes = self.class_counter.keys()
+        self.reduced_table = None
+
+    def _find_reduced_table_patterns(self, x: np.array):
         possible_patterns = x == self.X
-        for pattern, target_class in zip(possible_patterns, self.y):
-            indices = np.where(pattern)
+        sorted_table = sorted(
+            np.column_stack([possible_patterns, self.y]), key=lambda x: sum(x[:-1])
+        )
+        self.reduced_table = sorted_table
+
+    def _find_possible_patterns(self, x: np.array):
+        possible_patterns = dict(zip(self.classes, repeat(0.0)))
+        found_patterns = 0
+        for pattern in self.reduced_table:
+            if sum(pattern[:-1]) == 0:
+                continue
+            cl = pattern[-1]
+            indices = np.where(pattern[:-1])
+            matching_cases = 0
+            for matched_pattern in self.reduced_table:
+                if not np.equal(matched_pattern[indices], pattern[indices]).all():
+                    continue
+                if cl != matched_pattern[-1]:
+                    break
+                matching_cases += 1
+            else:
+                possible_patterns[cl] = matching_cases / self.class_counter[cl]
+                found_patterns += 1
+            if found_patterns == len(self.classes):
+                break
+        return possible_patterns
+            
+    def predict(self, x:np.array):
+        self._find_reduced_table_patterns(x)
+        possible_patterns = self._find_possible_patterns(x)
+        max_prob = 0
+        cl = None
+        for k, v in possible_patterns.items():
+            if v == 0.0:
+                continue
+            if v > max_prob:
+                cl = k
+                max_prob = v
+        if max_prob == 0:
+            return self.class_counter.most_common(1)[0][0]
+        return cl
+
+        """found_patterns = 0
+        for pattern in sorted_table:
+            indices = np.where(pattern[:-1])
             size = np.size(indices)
             if size == 0:
                 continue
-            current_shortest_contrast = contrast_patterns[target_class]
-            if current_shortest_contrast is not None and np.size(current_shortest_contrast) <= size:
+            if contrast_patterns_accuracy[pattern[-1]] is not None:
                 continue
-            #iterate over data, stop if two classes match the pattern
+            for possible_pattern in sorted_table:
+                if pattern[indices] is not possible_pattern[indices]:
+                    continue
                 
-        return contrast_patterns
+                
+                    
+            
+            
+            if found_patterns == np.size(self.classes):
+                break
+        return contrast_patterns_accuracy"""
