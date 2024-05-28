@@ -20,7 +20,8 @@ class NaiveBayes:
         for features, result_class in zip(train_features, train_classes):
             for i, feature in enumerate(features):
                 self.likelihoods[result_class, i][feature] += 1
-        total = self.priors.total()
+        # total = self.priors.total()
+        total = sum(self.priors.values())
         for key in self.priors.keys():
             key_occurances = self.priors[key]
             self.priors[key] /= total
