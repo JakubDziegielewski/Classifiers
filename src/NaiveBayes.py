@@ -30,13 +30,13 @@ class NaiveBayes:
                         key_occurances + group_vector[i]
                     )
 
-    def predict(self, sample):
+    def predict(self, X):
         predictions = np.array([], dtype='int32')
-        for s in sample:
+        for sample in X:
             max_probability = float("-inf")
             for key in self.priors.keys():
                 probability = np.log(self.priors[key])
-                for i, feature in enumerate(s):
+                for i, feature in enumerate(sample):
                     probability += np.log(self.likelihoods[key, i][feature])
                 if probability > max_probability:
                     prediction = key

@@ -40,18 +40,21 @@ class ContrastPatternClassificator:
                 break
         return possible_patterns
             
-    def predict(self, x:np.array):
-        self._find_reduced_table_patterns(x)
-        possible_patterns = self._find_possible_patterns(x)
-        max_prob = 0
-        cl = None
-        for k, v in possible_patterns.items():
-            if v == 0.0:
-                continue
-            if v > max_prob:
-                cl = k
-                max_prob = v
-        if max_prob == 0:
-            return self.class_counter.most_common(1)[0][0]
-        return cl
+    def predict(self, X:np.array):
+        predictions = np.array([], dtype='int32')
+        for x in X: 
+            self._find_reduced_table_patterns(x)
+            possible_patterns = self._find_possible_patterns(x)
+            max_prob = 0
+            cl = None
+            for k, v in possible_patterns.items():
+                if v == 0.0:
+                    continue
+                if v > max_prob:
+                    cl = k
+                    max_prob = v
+            if max_prob == 0:
+                cl = self.class_counter.most_common(1)[0][0]
+            predictions = np.append(predictions, cl)
+        return predictions
 
