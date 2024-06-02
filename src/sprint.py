@@ -79,21 +79,21 @@ class SPRINT():
         self.split(root, max_depth, min_size, 1)
         self.root = root
 
-    def test(self, test_data):
+    def predict(self, test_data):
         preds = []
         for row in test_data:
-            pred = self.predict(self.root, row)
+            pred = self.test(self.root, row)
             preds.append(pred)
         return preds
 
-    def predict(self, node, row):
+    def test(self, node, row):
         if row[node['index']] < node['value']:
             if isinstance(node['left'], dict):
-                return self.predict(node['left'], row)
+                return self.test(node['left'], row)
             else:
                 return (node['left'])
         else:
             if isinstance(node['right'], dict):
-                return self.predict(node['right'], row)
+                return self.test(node['right'], row)
             else:
                 return (node['right'])
