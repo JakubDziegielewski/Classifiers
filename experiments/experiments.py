@@ -8,7 +8,9 @@ import time
 import numpy as np
 from typing import List, Tuple, Dict
 from sklearn.metrics import precision_score, recall_score, make_scorer, accuracy_score
-from sklearn.model_selection import StratifiedKFold
+from sklearn.model_selection import StratifiedKFold, cross_val_score
+from sklearn.naive_bayes import CategoricalNB
+from sklearn.tree import DecisionTreeClassifier
 
 
 def plot(dict_list: List[Dict], file_group_list, ylabel: str, save_path="./imgs/"):
@@ -51,7 +53,7 @@ def cross_validation(classifier_name, X, y, cv, min_categories = None):
     return acc_scores
 
 
-def run_experiments(file_group_list: list, col_to_drop: List[str] = None, save_path="../imgs/"):
+def run_experiments(file_group_list: list, col_to_drop: List[str] = None, num_experiments: int = 1, save_path="../imgs/"):
     dict_list = []
     for i, (file_name, group_vector) in enumerate(file_group_list):
         dict_acc = {}
@@ -63,15 +65,15 @@ def run_experiments(file_group_list: list, col_to_drop: List[str] = None, save_p
 
         # lazy
         runtime = 0
-        for _ in range(10):
+        for _ in range(num_experiments):
             start_time = time.time()
             lazy_clf = ContrastPatternClassificator(x_train, y_train)
             pred = lazy_clf.predict(x_test)
             end_time = time.time()
             runtime += (end_time - start_time)
-        runtime /= 10.0
+        runtime /= num_experiments
         lazy_acc = sum(pred == y_test) / len(y_test)
-        print(cross_validation("lazy", x_train.copy(), y_train.copy(), 4))
+        print("Cross val for LAZY: ", cross_validation("lazy", x_train.copy(), y_train.copy(), 4))
         if len(set(y_test)) > 2:
             lazy_prec = precision_score(y_test, pred, average='macro')
             lazy_rec = recall_score(y_test, pred, average='macro')
@@ -79,26 +81,29 @@ def run_experiments(file_group_list: list, col_to_drop: List[str] = None, save_p
             lazy_prec = precision_score(y_test, pred, pos_label=0)
             lazy_rec = recall_score(y_test, pred, pos_label=0)
 
-        print(f"Lazy classification accuracy: {lazy_acc}")
+        print(f"Lazy classification accuracy for {str(file_name.rsplit('.', 1)[0])}: {lazy_acc}")
         dict_acc["lazy"] = lazy_acc
         dict_prec["lazy"] = lazy_prec
         dict_rec["lazy"] = lazy_rec
         dict_time["lazy"] = runtime
 
         # bayes
+        cnb = CategoricalNB(min_categories=group_vector)
+        cnb.fit(x_train, y_train)
+        print(f"SKLearn Bayes Accuracy for {str(file_name.rsplit('.', 1)[0])}: {cnb.score(x_test, y_test)}")
+        print(cross_val_score(cnb, x_test, y_test, cv=4))
         runtime = 0
-        for _ in range(10):
+        for _ in range(num_experiments):
             start_time = time.time()
             nb = NaiveBayes(group_vector)
             nb.fit(x_train, y_train)
             pred = nb.predict(x_test)
             end_time = time.time()
             runtime += (end_time - start_time)
-        runtime /= 10.0
+        runtime /= num_experiments
         nb = NaiveBayes(group_vector)
         bayes_acc = sum(pred == y_test) / len(y_test)
-        print(cross_validation("sprint", x_train.copy(), y_train.copy(), 4))
-        print(cross_validation("bayes", x_train.copy(), y_train.copy(), 4, min_categories=group_vector))
+        print("Cross val for BAYES: ", cross_validation("bayes", x_train.copy(), y_train.copy(), 4, min_categories=group_vector))
 
         if len(set(y_test)) > 2:
             bayes_prec = precision_score(y_test, pred, average='macro')
@@ -106,34 +111,39 @@ def run_experiments(file_group_list: list, col_to_drop: List[str] = None, save_p
         else:
             bayes_prec = precision_score(y_test, pred, pos_label=0)
             bayes_rec = recall_score(y_test, pred, pos_label=0)
-        print(f"Naive bayes accuracy: {bayes_acc}")
+        print(f"Naive bayes accuracy for {str(file_name.rsplit('.', 1)[0])}: {bayes_acc}")
         dict_acc["bayes"] = bayes_acc
         dict_prec["bayes"] = bayes_prec
         dict_rec["bayes"] = bayes_rec
         dict_time["bayes"] = runtime
 
         # sprint
+        dtc = DecisionTreeClassifier(criterion="gini", max_depth=4, min_samples_split=5)
+        dtc.fit(x_train, y_train)
+        print(f"SKLearn TREE Accuracy for {str(file_name.rsplit('.', 1)[0])}: {dtc.score(x_test, y_test)}")
+        print(cross_val_score(dtc, x_test, y_test, cv=4))
+
         max_depth = 4
         min_size = 5
         runtime = 0
-        for _ in range(10):
+        for _ in range(num_experiments):
             start_time = time.time()
             obj = SPRINT(x_train, y_train)
             obj.fit(max_depth, min_size)
             preds = obj.predict(x_test)
             end_time = time.time()
             runtime += (end_time - start_time)
-        runtime /= 10.0
+        runtime /= num_experiments
         sprint_acc = sum((preds==y_test))/len(y_test)
-        print(cross_validation("sprint", x_train.copy(), y_train.copy(), 4))
+        print("Cross val for SPRINT: ", cross_validation("sprint", x_train.copy(), y_train.copy(), 4))
 
         if len(set(y_test)) > 2:
             sprint_prec = precision_score(y_test, pred, average='macro')
             sprint_rec = recall_score(y_test, pred, average='macro')
         else:
-            sprint_prec = precision_score(y_test, pred, pos_label=0)
+            sprint_prec = precision_score(y_test, pred, pos_label=0, zero_division=)
             sprint_rec = recall_score(y_test, pred, pos_label=0)
-        print(f"Sprint accuracy: {sprint_acc} %")
+        print(f"Sprint accuracy for {str(file_name.rsplit('.', 1)[0])}: {sprint_acc} %")
         dict_acc["sprint"] = sprint_acc
         dict_prec["sprint"] = sprint_prec
         dict_rec["sprint"] = sprint_rec
@@ -146,5 +156,5 @@ def run_experiments(file_group_list: list, col_to_drop: List[str] = None, save_p
         ylabel = ["Accuracy [%]", "Precision [%]", "Recall [%]", "Time [s]"]
 
     for i in range(4):
-        dicts = [dict_list[i], dict_list[i + 4]]
+        dicts = [dict_list[i], dict_list[i + 4], dict_list[i+8]]
         plot(dicts, file_group_list, ylabel[i])
