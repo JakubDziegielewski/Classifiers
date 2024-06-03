@@ -36,18 +36,16 @@ def data_discretization(data, intervals):
 
 df["class"] = encode_column(df["class"])
 X = np.array(df.drop("class", axis=1))
+#X = np.array(df.drop("class", axis=1).drop("IDNumber", axis=1))
 y = np.array(df["class"])
 x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.1, random_state=3)
 intervals = find_intervals(x_train, [10, 10, 10, 10, 10, 10, 8, 10, 8, 10])
 x_train = np.array([data_discretization(features, intervals[i]) for i, features in enumerate(x_train.T)]).T
 x_test = np.array([data_discretization(features, intervals[i]) for i, features in enumerate(x_test.T)]).T
 lazy_clf = ContrastPatternClassificator(x_train, y_train)
-res = 0
-for i, v in enumerate(x_test):
-    pred = lazy_clf.predict(v)
-    if pred == y_test[i]:
-        res += 1
-print(f"Lazy classification accuracy: {res/len(y_test)}")
+
+pred = lazy_clf.predict(x_test)
+print(f"Lazy classification accuracy: {sum(pred == y_test)/len(y_test)}")
 
 nb = NaiveBayes()
 nb.fit(x_train, y_train)
