@@ -24,7 +24,7 @@ def plot(dict_list: List[Dict], file_group_list, ylabel: str, save_path="./imgs/
     plt.savefig(file_path)
     plt.show()
 
-def cross_validation(classifier_name, X, y, cv):
+def cross_validation(classifier_name, X, y, cv, min_categories = None):
     kf = StratifiedKFold(n_splits=cv)
     acc_scores = []
 
@@ -37,7 +37,7 @@ def cross_validation(classifier_name, X, y, cv):
             obj.fit(4, 5)
             preds = obj.predict(x_test)
         if classifier_name == "bayes":
-            nb = NaiveBayes()
+            nb = NaiveBayes(min_categories)
             nb.fit(x_train, y_train)
             preds = nb.predict(x_test)
         if classifier_name == "lazy":
@@ -51,7 +51,7 @@ def cross_validation(classifier_name, X, y, cv):
     return acc_scores
 
 
-def run_experiments(file_group_list: Tuple[str, List], col_to_drop: List[str] = None, save_path="../imgs/"):
+def run_experiments(file_group_list: list, col_to_drop: List[str] = None, save_path="../imgs/"):
     dict_list = []
     for i, (file_name, group_vector) in enumerate(file_group_list):
         dict_acc = {}
@@ -89,16 +89,16 @@ def run_experiments(file_group_list: Tuple[str, List], col_to_drop: List[str] = 
         runtime = 0
         for _ in range(10):
             start_time = time.time()
-            nb = NaiveBayes()
+            nb = NaiveBayes(group_vector)
             nb.fit(x_train, y_train)
             pred = nb.predict(x_test)
             end_time = time.time()
             runtime += (end_time - start_time)
         runtime /= 10.0
-        nb = NaiveBayes()
+        nb = NaiveBayes(group_vector)
         bayes_acc = sum(pred == y_test) / len(y_test)
         print(cross_validation("sprint", x_train.copy(), y_train.copy(), 4))
-        print(cross_validation("bayes", x_train.copy(), y_train.copy(), 4))
+        print(cross_validation("bayes", x_train.copy(), y_train.copy(), 4, min_categories=group_vector))
 
         if len(set(y_test)) > 2:
             bayes_prec = precision_score(y_test, pred, average='macro')
@@ -120,7 +120,7 @@ def run_experiments(file_group_list: Tuple[str, List], col_to_drop: List[str] = 
             start_time = time.time()
             obj = SPRINT(x_train, y_train)
             obj.fit(max_depth, min_size)
-            preds = obj.test(x_test)
+            preds = obj.predict(x_test)
             end_time = time.time()
             runtime += (end_time - start_time)
         runtime /= 10.0
@@ -133,7 +133,7 @@ def run_experiments(file_group_list: Tuple[str, List], col_to_drop: List[str] = 
         else:
             sprint_prec = precision_score(y_test, pred, pos_label=0)
             sprint_rec = recall_score(y_test, pred, pos_label=0)
-        print(f"Accuracy is: {sprint_acc} %")
+        print(f"Sprint accuracy: {sprint_acc} %")
         dict_acc["sprint"] = sprint_acc
         dict_prec["sprint"] = sprint_prec
         dict_rec["sprint"] = sprint_rec
