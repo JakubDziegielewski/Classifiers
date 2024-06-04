@@ -33,8 +33,8 @@ class NaiveBayes:
                     )
 
     def predict(self, X):
-        predictions = np.array([], dtype='int32')
-        for sample in X:
+        predictions = np.zeros(len(X), dtype='int32')
+        for i, sample in enumerate(X):
             max_probability = float("-inf")
             for key in self.priors.keys():
                 probability = np.log(self.priors[key])
@@ -43,5 +43,5 @@ class NaiveBayes:
                 if probability > max_probability:
                     prediction = key
                     max_probability = probability
-            predictions = np.append(predictions, prediction)
+            predictions[i] = prediction
         return predictions

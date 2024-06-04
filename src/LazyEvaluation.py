@@ -41,8 +41,8 @@ class ContrastPatternClassificator:
         return possible_patterns
             
     def predict(self, X:np.array):
-        predictions = np.array([], dtype='int32')
-        for x in X: 
+        predictions = np.zeros(len(X), dtype='int32')
+        for i, x in enumerate(X): 
             self._find_reduced_table_patterns(x)
             possible_patterns = self._find_possible_patterns(x)
             max_prob = 0
@@ -55,6 +55,6 @@ class ContrastPatternClassificator:
                     max_prob = v
             if max_prob == 0:
                 cl = self.class_counter.most_common(1)[0][0]
-            predictions = np.append(predictions, cl)
+            predictions[i] = cl
         return predictions
 

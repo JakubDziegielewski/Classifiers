@@ -80,10 +80,10 @@ class SPRINT():
         self.root = root
 
     def predict(self, test_data):
-        preds = []
-        for row in test_data:
+        preds = np.zeros(len(test_data), dtype='int32')
+        for i, row in enumerate(test_data):
             pred = self.test(self.root, row)
-            preds.append(pred)
+            preds[i] = pred
         return preds
 
     def test(self, node, row):
